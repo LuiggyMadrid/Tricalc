@@ -1,13 +1,22 @@
 #pragma once
 #include <afxwin.h>
 
+//#import <mscorlib.tlb> raw_interfaces_only
+#ifdef _DEBUG
+#import "..\..\NetZip\NetZip\bin\Debug\NetZip.tlb" no_namespace named_guids
+#else
+#import "..\..\NetZip\NetZip\bin\Release\NetZip.tlb" no_namespace named_guids
+#endif
+
 //Clona el interface de la clase CDPolarZip, añadiendo un miembro de la clase calassZip
 class CDPolarZipWarper :
     public CWnd
 {
 protected:
-	DECLARE_DYNCREATE(CPolarZIP)
+	DECLARE_DYNCREATE(CDPolarZipWarper)
 public:
+	INetZipInterface* cppIzip;
+
 	CLSID const& GetClsid()
 	{
 		static CLSID const clsid
@@ -23,13 +32,15 @@ public:
 		return CreateControl(GetClsid(), lpszWindowName, dwStyle, rect, pParentWnd, nID);
 	}
 
-	BOOL Create(LPCTSTR lpszWindowName, DWORD dwStyle,
-		const RECT& rect, CWnd* pParentWnd, UINT nID,
-		CFile* pPersist = NULL, BOOL bStorage = FALSE,
-		BSTR bstrLicKey = NULL)
+	BOOL Create(CWnd* pParentWnd)
 	{
-		return CreateControl(GetClsid(), lpszWindowName, dwStyle, rect, pParentWnd, nID,
-			pPersist, bStorage, bstrLicKey);
+		//if (!cppIzip)
+		//	cppIzip = new INetZipInterface;
+		if (!cppIzip || !cppIzip->Create())
+			return FALSE;
+		if (!CreateControl(GetClsid(), _T(""), WS_TABSTOP, CRect(0, 0, 0, 0), pParentWnd, 0))
+			return FALSE;
+		return TRUE;
 	}
 
 	// Attributes

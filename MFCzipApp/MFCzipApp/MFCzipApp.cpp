@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 #include "MFCzipApp.h"
 #include "MainFrm.h"
+#include "CDPolarZipWarper.h"
 
 
 #ifdef _DEBUG
@@ -19,6 +20,7 @@
 
 BEGIN_MESSAGE_MAP(CMFCzipAppApp, CWinApp)
 	ON_COMMAND(ID_APP_ABOUT, &CMFCzipAppApp::OnAppAbout)
+	ON_COMMAND(ID_ARCHIVO_TESTZIP,&CMFCzipAppApp::OnAppTestZip)
 END_MESSAGE_MAP()
 
 
@@ -159,6 +161,15 @@ void CMFCzipAppApp::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
 	aboutDlg.DoModal();
+}
+
+void CMFCzipAppApp::OnAppTestZip()
+{
+	CDPolarZipWarper m_ZIP;
+
+	BOOL ret = m_ZIP.Create(this->m_pActiveWnd);
+	m_ZIP.SetSourceDirectory(_T("C:\\drivers"));
+
 }
 
 // Controladores de mensajes de CMFCzipAppApp

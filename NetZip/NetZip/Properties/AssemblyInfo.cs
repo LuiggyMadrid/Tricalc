@@ -6,18 +6,18 @@ using System.Runtime.InteropServices;
 // conjunto de atributos. Cambie estos valores de atributo para modificar la información
 // asociada con un ensamblado.
 [assembly: AssemblyTitle("NetZip")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Zip library for cpp Programs")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hewlett-Packard Company")]
+[assembly: AssemblyCompany("LGT Soft")]
 [assembly: AssemblyProduct("NetZip")]
-[assembly: AssemblyCopyright("Copyright © Hewlett-Packard Company 2022")]
+[assembly: AssemblyCopyright("Copyright © LGT Soft 2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Si establece ComVisible en false, los tipos de este ensamblado no estarán visibles 
 // para los componentes COM.  Si es necesario obtener acceso a un tipo en este ensamblado desde 
 // COM, establezca el atributo ComVisible en true en este tipo.
-[assembly: ComVisible(false)]
+[assembly: ComVisible(true)]
 
 // El siguiente GUID sirve como id. de typelib si este proyecto se expone a COM.
 [assembly: Guid("3968b073-89a3-4a7d-a0cc-e20927a7cff7")]

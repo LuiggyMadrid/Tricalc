@@ -167,9 +167,57 @@ void CMFCzipAppApp::OnAppTestZip()
 {
 	CDPolarZipWarper m_ZIP;
 
-	BOOL ret = m_ZIP.Create(this->m_pActiveWnd);
-	m_ZIP.SetSourceDirectory(_T("C:\\drivers"));
+	// Initialize COM and create an instance of the InterfaceImplementation class:
+	HRESULT hr = CoInitialize(NULL);
+	if (FAILED(hr))
+	{
+		printf("Couldn't initiate COM!... 0x%x\n", hr);
+		return;
+	}
 
+	BOOL ret = m_ZIP.Create(this->m_pMainWnd);
+	if (!ret)
+		return;
+	
+	//Ejemplo para comprimir un directorio
+	m_ZIP.SetSourceDirectory(_T("C:\\drivers"));
+	m_ZIP.SetExtractDirectory(_T(""));
+	//m_ZIP.SetTemporaryPath(_T(""));
+	//m_ZIP.SetPolarZipSpanDllDirectory(_T(""));
+	m_ZIP.SetZipFileName(_T("C:\\Arktec\\Sample.zip");
+	//Options
+	//m_ZIP.SetConvertSpacesToUnderscores(FALSE);
+	//m_ZIP.SetConvertCRLFtoLF(FALSE);
+	//m_ZIP.SetMultiDiskEraseDisks(FALSE);
+	m_ZIP.SetIncludeHiddenFiles(TRUE);
+	m_ZIP.SetIncludeDirectoryEntries(FALSE);
+	//m_ZIP.SetIncludeVolumeLabel(FALSE);
+	//m_ZIP.SetConvertLFtoCRLF(FALSE);
+	//m_ZIP.SetMultiDiskCreate(FALSE);
+	m_ZIP.SetOverwrite(FALSE);
+	m_ZIP.SetRecurseSubDirectories(TRUE);
+	//m_ZIP.SetRestoreVolumeLabel(FALSE);
+	m_ZIP.SetStorePaths(TRUE);
+	//m_ZIP.SetMultiDiskUseDefaultDialogs(1);
+	m_ZIP.SetUsePassword(FALSE);
+	m_ZIP.SetPassword(_T(""));
+	m_ZIP.SetCompressionLevel(9);	// El máximo
+	//m_ZIP.SetMultiDiskDialogCaption(_T(""));
+	//m_ZIP.SetMultiDiskFreeOnFirstDisk(FALSE);
+	//m_ZIP.SetMultiDiskMaxVolumeSize(FALSE);
+	//m_ZIP.SetMultiDiskMinimumFreeOnDisk(FALSE);
+	m_ZIP.SetNoCompressSuffixes(_T(""));
+	m_ZIP.SetExcludeFileMask(_T("Backup\\*.*"));
+	m_ZIP.SetIncludeFileMask(_T("*");
+	//m_ZIP.SetSkipFilesAfterDate(_T(""));
+	//m_ZIP.SetSkipFilesBeforeDate(_T(""));
+	//m_ZIP.SetAction((accion == 2 || accion == 10) ? 1 : ((accion == 7 || accion == 8) ? 6 : accion));
+	m_ZIP.Add();
+
+
+	m_ZIP.cppIzip->Release();
+	// Be a good citizen and clean up COM:
+	CoUninitialize();
 }
 
 // Controladores de mensajes de CMFCzipAppApp

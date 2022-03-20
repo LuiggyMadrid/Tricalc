@@ -15,7 +15,7 @@ class CDPolarZipWarper :
 protected:
 	DECLARE_DYNCREATE(CDPolarZipWarper)
 public:
-	INetZipInterface* cppIzip;
+	INetZipInterface* cppIzip = nullptr;
 
 	CLSID const& GetClsid()
 	{
@@ -34,13 +34,25 @@ public:
 
 	BOOL Create(CWnd* pParentWnd)
 	{
-		//if (!cppIzip)
-		//	cppIzip = new INetZipInterface;
+		BOOL ret = TRUE;
+		HRESULT hr = S_OK;
+
+		hr = CoCreateInstance(CLSID_InterfaceImplementation,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_INetZipInterface,
+			reinterpret_cast<void**>(&cppIzip));
+
+		if (FAILED(hr))
+		{
+			printf("Couldn't create the instance!... 0x%x\n", hr);
+			ret = FALSE;
+		}
+		if (!CreateControl(GetClsid(), NULL, WS_TABSTOP, CRect(0, 0, 100, 100), pParentWnd, 0))
+			ret = TRUE; //FALSE;
 		if (!cppIzip || !cppIzip->Create())
-			return FALSE;
-		if (!CreateControl(GetClsid(), _T(""), WS_TABSTOP, CRect(0, 0, 0, 0), pParentWnd, 0))
-			return FALSE;
-		return TRUE;
+			ret = FALSE;
+		return ret;
 	}
 
 	// Attributes

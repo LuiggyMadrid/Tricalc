@@ -184,7 +184,7 @@ void CMFCzipAppApp::OnAppTestZip()
 	m_ZIP.SetExtractDirectory(_T(""));
 	//m_ZIP.SetTemporaryPath(_T(""));
 	//m_ZIP.SetPolarZipSpanDllDirectory(_T(""));
-	m_ZIP.SetZipFileName(_T("C:\\Arktec\\Sample.zip");
+	m_ZIP.SetZipFileName(_T("C:\\Arktec\\Sample.zip"));
 	//Options
 	//m_ZIP.SetConvertSpacesToUnderscores(FALSE);
 	//m_ZIP.SetConvertCRLFtoLF(FALSE);
@@ -208,14 +208,12 @@ void CMFCzipAppApp::OnAppTestZip()
 	//m_ZIP.SetMultiDiskMinimumFreeOnDisk(FALSE);
 	m_ZIP.SetNoCompressSuffixes(_T(""));
 	m_ZIP.SetExcludeFileMask(_T("Backup\\*.*"));
-	m_ZIP.SetIncludeFileMask(_T("*");
+	m_ZIP.SetIncludeFileMask(_T("*"));
 	//m_ZIP.SetSkipFilesAfterDate(_T(""));
 	//m_ZIP.SetSkipFilesBeforeDate(_T(""));
 	//m_ZIP.SetAction((accion == 2 || accion == 10) ? 1 : ((accion == 7 || accion == 8) ? 6 : accion));
 	m_ZIP.Add();
 
-
-	m_ZIP.cppIzip->Release();
 	// Be a good citizen and clean up COM:
 	CoUninitialize();
 }

@@ -15,57 +15,23 @@ public:
 	INetZipInterface* cppIzip = nullptr;
 	CWnd* pParentWnd = nullptr;
 
-	CDPolarZipWarper() {}
-	~CDPolarZipWarper() {
-		cppIzip->Release();
-	}
-
-	BOOL Create(CWnd* _pParentWnd)
-	{
-		BOOL ret = TRUE;
-		HRESULT hr = S_OK;
-
-		pParentWnd = _pParentWnd;
-		hr = CoCreateInstance(CLSID_InterfaceImplementation,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_INetZipInterface,
-			reinterpret_cast<void**>(&cppIzip));
-
-		if (FAILED(hr))
-		{
-			printf("Couldn't create the instance!... 0x%x\n", hr);
-			ret = FALSE;
-		}
-		if (!cppIzip || !cppIzip->Create())
-			ret = FALSE;
-		return ret;
-	}
+	CDPolarZipWarper(CWnd* _pParentWnd = nullptr);
+	~CDPolarZipWarper();
 
 	// Attributes
 public:
-	//BOOL GetRestoreVolumeLabel();
-	//void SetRestoreVolumeLabel(BOOL);
-	//BOOL GetMultiDiskEraseDisks();
-	//void SetMultiDiskEraseDisks(BOOL);
-	//BOOL GetConvertSpacesToUnderscores();
-	//void SetConvertSpacesToUnderscores(BOOL);
 	CString GetSkipFilesBeforeDate() { ASSERT(false); return CString(""); }
 	void SetSkipFilesBeforeDate(LPCTSTR) { ASSERT(FALSE); }
 	CString GetSkipFilesAfterDate() { ASSERT(false); return CString(""); }
 	void SetSkipFilesAfterDate(LPCTSTR) { ASSERT(FALSE); }
-	//BOOL GetConvertLFtoCRLF();
-	//void SetConvertLFtoCRLF(BOOL);
-	//BOOL GetConvertCRLFtoLF();
-	//void SetConvertCRLFtoLF(BOOL);
 	BOOL GetOverwrite();
 	void SetOverwrite(BOOL);
 	BOOL GetIncludeDirectoryEntries();
 	void SetIncludeDirectoryEntries(BOOL);
+	BOOL GetIncludeBaseDirectory();
+	void SetIncludeBaseDirectory(BOOL);
 	BOOL GetIncludeHiddenFiles();
 	void SetIncludeHiddenFiles(BOOL);
-	//BOOL GetIncludeVolumeLabel();
-	//void SetIncludeVolumeLabel(BOOL);
 	BOOL GetRecurseSubDirectories();
 	void SetRecurseSubDirectories(BOOL);
 	BOOL GetStorePaths();
@@ -74,8 +40,6 @@ public:
 	void SetUsePassword(BOOL);
 	long GetCompressionLevel();
 	void SetCompressionLevel(long);
-	//long GetAction();
-	//void SetAction(long);
 	CString GetExcludeFileMask();
 	void SetExcludeFileMask(LPCTSTR);
 	CString GetExtractDirectory();
@@ -118,16 +82,25 @@ public:
 	CString GetArchiveComment(LPCTSTR strZipFileName);
 	long CreateZipFromMultiFileArchive(LPCTSTR strInFile, LPCTSTR strOutFile);
 	long TestArchive(LPCTSTR strZipFileName);
-	long CreateMultiDiskArchiveFromZip(LPCTSTR strInFile, LPCTSTR strOutFile);
+	//long CreateMultiDiskArchiveFromZip(LPCTSTR strInFile, LPCTSTR strOutFile);
 	long TimeStampArchive(LPCTSTR strZipFileName);
-	long Add();
-	CString GetUnzipErrorDescription(long nError);
-	CString GetZipErrorDescription(long nError);
-	long GetLastZipError();
-	long GetLastUnzipError();
+	
+	/// <summary>
+	/// Compress in ZIP format
+	/// </summary>
+	/// <param name="create">TRUE for creating a new ZIP file; false to append in an existing ZIP file</param>
+	/// <returns>Error code (S_OK for successful)</returns>
+	HRESULT Add(BOOL create = TRUE);
+	
+	/// <summary>
+	/// Get Last error message and code
+	/// </summary>
+	/// <param name="errorCode">OUT: Error code</param>
+	/// <returns>Error message</returns>
+	CString GetLastZipError(HRESULT &errorCode);
+
 	long Extract();
 	long FixZipFile(LPCTSTR strZipFileName, BOOL bHarder);
-	void AboutBox();
 };
 
 

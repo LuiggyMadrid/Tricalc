@@ -1,6 +1,39 @@
 #include "pch.h"
 #include "CDPolarZipWarper.h"
 
+CDPolarZipWarper::CDPolarZipWarper(CWnd* _pParentWnd)
+{
+	BOOL ret = TRUE;
+	HRESULT hr = S_OK;
+
+	pParentWnd = _pParentWnd;
+	hr = CoCreateInstance(CLSID_InterfaceImplementation,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_INetZipInterface,
+		reinterpret_cast<void**>(&cppIzip));
+
+	if (FAILED(hr))
+	{
+		printf("Couldn't create the instance!... 0x%x\n", hr);
+		ret = FALSE;
+	}
+	if (!cppIzip || !cppIzip->Create())
+		ret = FALSE;
+	if (!ret)
+	{
+		if (cppIzip)
+			cppIzip->Release();
+		cppIzip = nullptr;
+	}
+}
+
+CDPolarZipWarper::~CDPolarZipWarper()
+{
+	if (cppIzip)
+		cppIzip->Release();
+}
+
 void CDPolarZipWarper::SetSourceDirectory(LPCTSTR pszSourceDir)
 {
 	if (this->cppIzip)
@@ -66,6 +99,21 @@ void CDPolarZipWarper::SetIncludeDirectoryEntries(BOOL val)
 	//TO DO
 }
 
+BOOL CDPolarZipWarper::GetIncludeBaseDirectory()
+{
+	if (cppIzip)
+		return cppIzip->GetIncludeBaseDirectory();
+	else
+		return FALSE;
+}
+
+void CDPolarZipWarper::SetIncludeBaseDirectory(BOOL val)
+{
+	if (cppIzip)
+		cppIzip->SetIncludeBaseDirectory(!!val);
+
+}
+
 BOOL CDPolarZipWarper::GetIncludeHiddenFiles()
 {
 	//TO DO
@@ -79,13 +127,16 @@ void CDPolarZipWarper::SetIncludeHiddenFiles(BOOL val)
 
 BOOL CDPolarZipWarper::GetRecurseSubDirectories()
 {
-	//TO DO
-	return TRUE;
+	if (this->cppIzip)
+		return this->cppIzip->GetRecurseSubDirectories();
+	else
+		return FALSE;
 }
 
 void CDPolarZipWarper::SetRecurseSubDirectories(BOOL val)
 {
-	//TO DO
+	if (this->cppIzip)
+		this->cppIzip->SetRecurseSubDirectories(!!val);
 }
 
 BOOL CDPolarZipWarper::GetStorePaths()
@@ -112,13 +163,16 @@ void CDPolarZipWarper::SetUsePassword(BOOL val)
 
 long CDPolarZipWarper::GetCompressionLevel()
 {
-	//TO DO
-	return 9;
+	if (this->cppIzip)
+		return this->cppIzip->GetCompressionLevel();
+	else
+		return 0;
 }
 
 void CDPolarZipWarper::SetCompressionLevel(long val)
 {
-	//TO DO
+	if (this->cppIzip)
+		this->cppIzip->SetCompressionLevel(val);
 }
 
 CString CDPolarZipWarper::GetExcludeFileMask()
@@ -181,14 +235,36 @@ void CDPolarZipWarper::SetPassword(LPCTSTR pszPassword)
 		this->cppIzip->SetPassword(pszPassword);
 }
 
-long CDPolarZipWarper::Add()
+/// <summary>
+/// Compress in ZIP format
+/// </summary>
+/// <param name="create">TRUE for creating a new ZIP file; false to append in an existing ZIP file</param>
+/// <returns>Errorcode (S_OK for successful)</returns>
+HRESULT CDPolarZipWarper::Add(BOOL create)
 {
 	if (this->cppIzip)
 	{
-		CString s1 = this->cppIzip->GetSourceDirectory();
-		CString s2 = this->cppIzip->GetZipFileName();
-		return this->cppIzip->Add();
+		return this->cppIzip->Add(!!create);
 	}
 	else
-		return -1;
+		return S_FALSE;
+}
+
+/// <summary>
+/// Get Last error message and code
+/// </summary>
+/// <param name="errorCode">OUT: Error code</param>
+/// <returns>Error message</returns>
+CString CDPolarZipWarper::GetLastZipError(HRESULT& errorCode)
+{
+	errorCode = S_FALSE;
+	if (this->cppIzip)
+	{
+		return CString(cppIzip->GetLastZipError(& errorCode).GetBSTR());
+	}
+	else
+	{
+		errorCode = -1;
+		return CString("Error desconocido");
+	}
 }

@@ -165,8 +165,6 @@ void CMFCzipAppApp::OnAppAbout()
 
 void CMFCzipAppApp::OnAppTestZip()
 {
-	CDPolarZipWarper m_ZIP;
-
 	// Initialize COM and create an instance of the InterfaceImplementation class:
 	HRESULT hr = CoInitialize(NULL);
 	if (FAILED(hr))
@@ -175,44 +173,37 @@ void CMFCzipAppApp::OnAppTestZip()
 		return;
 	}
 
-	BOOL ret = m_ZIP.Create(this->m_pMainWnd);
+	CDPolarZipWarper m_ZIP(this->m_pMainWnd);
+
+	BOOL ret = m_ZIP.cppIzip != nullptr;
 	if (!ret)
 		return;
 	
 	//Ejemplo para comprimir un directorio
-	m_ZIP.SetSourceDirectory(_T("C:\\drivers"));
+	m_ZIP.SetSourceDirectory(_T("C:\\Arktec\\LGT\\ConOcultos"));
 	m_ZIP.SetExtractDirectory(_T(""));
-	//m_ZIP.SetTemporaryPath(_T(""));
-	//m_ZIP.SetPolarZipSpanDllDirectory(_T(""));
-	m_ZIP.SetZipFileName(_T("C:\\Arktec\\Sample.zip"));
+	m_ZIP.SetZipFileName(_T("C:\\Arktec\\LGT\\ConOcultos.zip"));
 	//Options
-	//m_ZIP.SetConvertSpacesToUnderscores(FALSE);
-	//m_ZIP.SetConvertCRLFtoLF(FALSE);
-	//m_ZIP.SetMultiDiskEraseDisks(FALSE);
+	m_ZIP.SetIncludeBaseDirectory(FALSE);
 	m_ZIP.SetIncludeHiddenFiles(TRUE);
 	m_ZIP.SetIncludeDirectoryEntries(FALSE);
-	//m_ZIP.SetIncludeVolumeLabel(FALSE);
-	//m_ZIP.SetConvertLFtoCRLF(FALSE);
-	//m_ZIP.SetMultiDiskCreate(FALSE);
 	m_ZIP.SetOverwrite(FALSE);
 	m_ZIP.SetRecurseSubDirectories(TRUE);
-	//m_ZIP.SetRestoreVolumeLabel(FALSE);
 	m_ZIP.SetStorePaths(TRUE);
-	//m_ZIP.SetMultiDiskUseDefaultDialogs(1);
 	m_ZIP.SetUsePassword(FALSE);
 	m_ZIP.SetPassword(_T(""));
 	m_ZIP.SetCompressionLevel(9);	// El máximo
-	//m_ZIP.SetMultiDiskDialogCaption(_T(""));
-	//m_ZIP.SetMultiDiskFreeOnFirstDisk(FALSE);
-	//m_ZIP.SetMultiDiskMaxVolumeSize(FALSE);
-	//m_ZIP.SetMultiDiskMinimumFreeOnDisk(FALSE);
 	m_ZIP.SetNoCompressSuffixes(_T(""));
-	m_ZIP.SetExcludeFileMask(_T("Backup\\*.*"));
+	m_ZIP.SetExcludeFileMask(_T(""));//_T("Backup\\*.*"));
 	m_ZIP.SetIncludeFileMask(_T("*"));
 	//m_ZIP.SetSkipFilesAfterDate(_T(""));
 	//m_ZIP.SetSkipFilesBeforeDate(_T(""));
-	//m_ZIP.SetAction((accion == 2 || accion == 10) ? 1 : ((accion == 7 || accion == 8) ? 6 : accion));
-	m_ZIP.Add();
+	if (m_ZIP.Add())
+	{
+		CString sErr = m_ZIP.GetLastZipError(hr);
+		this->m_pMainWnd->MessageBox(sErr.GetString(), _T("Error"), MB_OK | MB_ICONSTOP);
+
+	}
 
 	// Be a good citizen and clean up COM:
 	CoUninitialize();

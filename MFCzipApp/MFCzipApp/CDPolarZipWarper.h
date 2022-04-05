@@ -99,6 +99,8 @@ public:
 	/// <returns>Error message</returns>
 	CString GetLastZipError(HRESULT &errorCode);
 
+	//Conflicto
+
 	long Extract();
 	long FixZipFile(LPCTSTR strZipFileName, BOOL bHarder);
 };

@@ -242,13 +242,15 @@ void CDPolarZipWarper::SetPassword(LPCTSTR pszPassword)
 /// <returns>Errorcode (S_OK for successful)</returns>
 HRESULT CDPolarZipWarper::Add(BOOL create)
 {
-	if (this->cppIzip)
+	if (this->cppIzip) //Siempre comprobar
 	{
 		return this->cppIzip->Add(!!create);
 	}
 	else
 		return S_FALSE;
 }
+
+//Conflicto
 
 /// <summary>
 /// Get Last error message and code

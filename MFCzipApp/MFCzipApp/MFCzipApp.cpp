@@ -196,7 +196,7 @@ void CMFCzipAppApp::OnAppTestZip()
 	m_ZIP.SetNoCompressSuffixes(_T(""));
 	m_ZIP.SetExcludeFileMask(_T(""));//_T("Backup\\*.*"));
 	m_ZIP.SetIncludeFileMask(_T("*"));
-	//m_ZIP.SetSkipFilesAfterDate(_T(""));
+	//m_ZIP.SetSkipFilesAfterDate(_T(""));  //¿lo necesitamos?
 	//m_ZIP.SetSkipFilesBeforeDate(_T(""));
 	if (m_ZIP.Add())
 	{

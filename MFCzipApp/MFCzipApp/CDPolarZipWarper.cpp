@@ -239,7 +239,7 @@ void CDPolarZipWarper::SetPassword(LPCTSTR pszPassword)
 /// Compress in ZIP format
 /// </summary>
 /// <param name="create">TRUE for creating a new ZIP file; false to append in an existing ZIP file</param>
-/// <returns>Errorcode (S_OK for successful)</returns>
+/// <returns>Error code (S_OK for successful)</returns>
 HRESULT CDPolarZipWarper::Add(BOOL create)
 {
 	if (this->cppIzip) //Siempre comprobar
@@ -251,6 +251,20 @@ HRESULT CDPolarZipWarper::Add(BOOL create)
 }
 
 //Conflicto
+
+/// <summary>
+/// Extracts from an existing Zip file
+/// </summary>
+/// <returns>Error code (S_OK for successful)</returns>
+HRESULT CDPolarZipWarper::Extract()
+{
+	if (this->cppIzip)
+	{
+		return this->cppIzip->Extract();
+	}
+	else
+		return S_FALSE;
+}
 
 /// <summary>
 /// Get Last error message and code

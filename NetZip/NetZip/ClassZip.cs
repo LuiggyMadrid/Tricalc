@@ -26,7 +26,7 @@ namespace NetZip
         private string _zipFileName = null;
         private string _lastErrorMsg = null;
 
-        private int _version = 0;
+        private int _version = 1;
         private int _lastErrorCode = 0;
         private bool _recurseSubDirectories = false;
         private bool _includeBaseDirectory = false;
@@ -77,7 +77,7 @@ namespace NetZip
                 //Compress Directory
                 try
                 {
-                    ZipFile.CreateFromDirectory(m_SourceDirectory, m_ZipFileName, m_CompressionLevel, false); // includeBaseDirectory);
+                    ZipFile.CreateFromDirectory(m_SourceDirectory, m_ZipFileName, m_CompressionLevel, m_IncludeBaseDirectory);
                     return 0;
                 }
                 catch (Exception ex)
@@ -87,6 +87,80 @@ namespace NetZip
                     return ex.HResult;
                 }
             }
+            return 0;
+        }
+
+        //----------------------------------------------------------------------
+        /// <summary>
+        /// Extract from an existing zip file
+        /// </summary>
+        /// <returns></returns>
+        public Int32 Extract()
+        {
+            m_LastErrorCode = 0;
+            m_LastErrorMsg = string.Empty;
+
+            if (string.IsNullOrEmpty(m_ExtractDirectory) ||
+                string.IsNullOrEmpty(m_ZipFileName))
+            {
+                m_LastErrorCode = -1;
+                m_LastErrorMsg = "Hay parámetros vacíos";
+                return m_LastErrorCode;
+            }
+
+            if (m_RecurseSubDirectories == true &&
+                string.IsNullOrEmpty(m_ExcludeFileMask) &&
+                string.IsNullOrEmpty(m_NoCompressSuffixes) &&
+                (string.IsNullOrEmpty(m_IncludeFileMask) || m_IncludeFileMask == "*"))
+            {
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                // Extract Full Directory
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                try
+                {
+                    ZipFile.ExtractToDirectory(m_ZipFileName, m_ExtractDirectory);
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    m_LastErrorMsg = ex.Message;
+                    m_LastErrorCode = ex.HResult;
+                    return ex.HResult;
+                }
+            }
+            else
+            {
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                // Extract with options
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                try
+                {
+                    using (ZipArchive archive = ZipFile.OpenRead(m_ZipFileName))
+                    {
+                        foreach (ZipArchiveEntry entry in archive.Entries)
+                        {
+                            if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Gets the full path to ensure that relative segments are removed.
+                                string destinationPath = Path.GetFullPath(Path.Combine(m_ExtractDirectory, entry.FullName));
+
+                                // Ordinal match is safest, case-sensitive volumes can be mounted within volumes that
+                                // are case-insensitive.
+                                if (destinationPath.StartsWith(extractPath, StringComparison.Ordinal))
+                                    entry.ExtractToFile(destinationPath);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    m_LastErrorMsg = ex.Message;
+                    m_LastErrorCode = ex.HResult;
+                    return ex.HResult;
+                }
+            }
+
+            // Resto de casos
             return 0;
         }
     }
@@ -133,6 +207,12 @@ namespace NetZip
         Int32 Add(bool create);
 
         /// <summary>
+        /// Extracts from an existing zip file
+        /// </summary>
+        /// <returns></returns>
+        Int32 Extract();
+
+        /// <summary>
         /// Return last error condition, if any
         /// </summary>
         /// <param name="hResult">Error code (0 == S_OK for success</param>
@@ -165,8 +245,20 @@ namespace NetZip
             else zipI.m_CompressionLevel = CompressionLevel.Optimal;
         }
 
-        public void SetSourceDirectory(string soureDir) { zipI.m_SourceDirectory = soureDir; }
-        public void SetExtractDirectory(string extractDir) { zipI.m_ExtractDirectory = extractDir; }
+        public void SetSourceDirectory(string soureDir)
+        {
+            // Ensures that the last character on the extraction path is the directory separator char.
+            if (!string.IsNullOrEmpty(soureDir) && !soureDir.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                soureDir += Path.DirectorySeparatorChar;
+            zipI.m_SourceDirectory = soureDir;
+        }
+        public void SetExtractDirectory(string extractDir)
+        {
+            // Ensures that the last character on the extraction path is the directory separator char.
+            if (!string.IsNullOrEmpty(extractDir) && !extractDir.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                extractDir += Path.DirectorySeparatorChar;
+            zipI.m_ExtractDirectory = extractDir;
+        }
         public void SetExcludeFileMask(string excludeFileMask) { zipI.m_ExcludeFileMask = excludeFileMask; }
         public void SetIncludeFileMask(string includeFileMask) { zipI.m_IncludeFileMask = includeFileMask; }
         public void SetNoCompressSuffixes(string noCompressSuffixes) { zipI.m_NoCompressSuffixes = noCompressSuffixes; }
@@ -195,6 +287,7 @@ namespace NetZip
             }
         }
         public Int32 Add(bool create) { return zipI.Add(create); }
+        public Int32 Extract() { return zipI.Extract(); }
         public string GetLastZipError(ref Int32 hResult)
         {
             hResult = zipI.m_LastErrorCode;

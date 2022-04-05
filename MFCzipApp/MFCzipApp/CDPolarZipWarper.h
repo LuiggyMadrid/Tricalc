@@ -99,9 +99,13 @@ public:
 	/// <returns>Error message</returns>
 	CString GetLastZipError(HRESULT &errorCode);
 
-	//Conflicto
+	/// <summary>
+	/// Extract from an existing zip file
+	/// </summary>
+	/// <param name="create">TRUE for creating a new ZIP file; false to append in an existing ZIP file</param>
+	/// <returns>Error code (S_OK for successful)</returns>
+	HRESULT Extract();
 
-	long Extract();
 	long FixZipFile(LPCTSTR strZipFileName, BOOL bHarder);
 };
 

@@ -26,7 +26,7 @@ namespace NetZip
         private string _zipFileName = null;
         private string _lastErrorMsg = null;
 
-        private int _version = 0;
+        private int _version = 1;
         private int _lastErrorCode = 0;
         private bool _recurseSubDirectories = false;
         private bool _includeBaseDirectory = false;
@@ -113,7 +113,9 @@ namespace NetZip
                 string.IsNullOrEmpty(m_NoCompressSuffixes) &&
                 (string.IsNullOrEmpty(m_IncludeFileMask) || m_IncludeFileMask == "*"))
             {
-                //Extract Directory
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                // Extract Full Directory
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                 try
                 {
                     ZipFile.ExtractToDirectory(m_ZipFileName, m_ExtractDirectory);
@@ -126,9 +128,41 @@ namespace NetZip
                     return ex.HResult;
                 }
             }
+            else
+            {
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                // Extract with options
+                //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                try
+                {
+                    using (ZipArchive archive = ZipFile.OpenRead(m_ZipFileName))
+                    {
+                        foreach (ZipArchiveEntry entry in archive.Entries)
+                        {
+                            if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Gets the full path to ensure that relative segments are removed.
+                                string destinationPath = Path.GetFullPath(Path.Combine(m_ExtractDirectory, entry.FullName));
+
+                                // Ordinal match is safest, case-sensitive volumes can be mounted within volumes that
+                                // are case-insensitive.
+                                if (destinationPath.StartsWith(extractPath, StringComparison.Ordinal))
+                                    entry.ExtractToFile(destinationPath);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    m_LastErrorMsg = ex.Message;
+                    m_LastErrorCode = ex.HResult;
+                    return ex.HResult;
+                }
+            }
+
+            // Resto de casos
             return 0;
         }
-
     }
 
     [Guid("82508DF9-C406-4B57-808B-C23B41B9A633")]
@@ -211,8 +245,20 @@ namespace NetZip
             else zipI.m_CompressionLevel = CompressionLevel.Optimal;
         }
 
-        public void SetSourceDirectory(string soureDir) { zipI.m_SourceDirectory = soureDir; }
-        public void SetExtractDirectory(string extractDir) { zipI.m_ExtractDirectory = extractDir; }
+        public void SetSourceDirectory(string soureDir)
+        {
+            // Ensures that the last character on the extraction path is the directory separator char.
+            if (!string.IsNullOrEmpty(soureDir) && !soureDir.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                soureDir += Path.DirectorySeparatorChar;
+            zipI.m_SourceDirectory = soureDir;
+        }
+        public void SetExtractDirectory(string extractDir)
+        {
+            // Ensures that the last character on the extraction path is the directory separator char.
+            if (!string.IsNullOrEmpty(extractDir) && !extractDir.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                extractDir += Path.DirectorySeparatorChar;
+            zipI.m_ExtractDirectory = extractDir;
+        }
         public void SetExcludeFileMask(string excludeFileMask) { zipI.m_ExcludeFileMask = excludeFileMask; }
         public void SetIncludeFileMask(string includeFileMask) { zipI.m_IncludeFileMask = includeFileMask; }
         public void SetNoCompressSuffixes(string noCompressSuffixes) { zipI.m_NoCompressSuffixes = noCompressSuffixes; }

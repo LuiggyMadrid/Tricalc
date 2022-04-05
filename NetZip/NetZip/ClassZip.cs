@@ -77,7 +77,7 @@ namespace NetZip
                 //Compress Directory
                 try
                 {
-                    ZipFile.CreateFromDirectory(m_SourceDirectory, m_ZipFileName, m_CompressionLevel, false); // includeBaseDirectory);
+                    ZipFile.CreateFromDirectory(m_SourceDirectory, m_ZipFileName, m_CompressionLevel, m_IncludeBaseDirectory);
                     return 0;
                 }
                 catch (Exception ex)
@@ -89,6 +89,46 @@ namespace NetZip
             }
             return 0;
         }
+
+        //----------------------------------------------------------------------
+        /// <summary>
+        /// Extract from an existing zip file
+        /// </summary>
+        /// <returns></returns>
+        public Int32 Extract()
+        {
+            m_LastErrorCode = 0;
+            m_LastErrorMsg = string.Empty;
+
+            if (string.IsNullOrEmpty(m_ExtractDirectory) ||
+                string.IsNullOrEmpty(m_ZipFileName))
+            {
+                m_LastErrorCode = -1;
+                m_LastErrorMsg = "Hay parámetros vacíos";
+                return m_LastErrorCode;
+            }
+
+            if (m_RecurseSubDirectories == true &&
+                string.IsNullOrEmpty(m_ExcludeFileMask) &&
+                string.IsNullOrEmpty(m_NoCompressSuffixes) &&
+                (string.IsNullOrEmpty(m_IncludeFileMask) || m_IncludeFileMask == "*"))
+            {
+                //Extract Directory
+                try
+                {
+                    ZipFile.ExtractToDirectory(m_ZipFileName, m_ExtractDirectory);
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    m_LastErrorMsg = ex.Message;
+                    m_LastErrorCode = ex.HResult;
+                    return ex.HResult;
+                }
+            }
+            return 0;
+        }
+
     }
 
     [Guid("82508DF9-C406-4B57-808B-C23B41B9A633")]
@@ -131,6 +171,12 @@ namespace NetZip
         /// <param name="create">TRUE for creating a new ZIP file; false to append in an existing ZIP file</param>
         /// <returns></returns>
         Int32 Add(bool create);
+
+        /// <summary>
+        /// Extracts from an existing zip file
+        /// </summary>
+        /// <returns></returns>
+        Int32 Extract();
 
         /// <summary>
         /// Return last error condition, if any
@@ -195,6 +241,7 @@ namespace NetZip
             }
         }
         public Int32 Add(bool create) { return zipI.Add(create); }
+        public Int32 Extract() { return zipI.Extract(); }
         public string GetLastZipError(ref Int32 hResult)
         {
             hResult = zipI.m_LastErrorCode;

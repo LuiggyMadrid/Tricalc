@@ -179,12 +179,13 @@ void CMFCzipAppApp::OnAppTestZip()
 	if (!ret)
 		return;
 	
-	//Ejemplo para comprimir un directorio
+	//--------------------------------------------------------------------------
+	// Ejemplo para comprimir un directorio
 	m_ZIP.SetSourceDirectory(_T("C:\\Arktec\\LGT\\ConOcultos"));
 	m_ZIP.SetExtractDirectory(_T(""));
 	m_ZIP.SetZipFileName(_T("C:\\Arktec\\LGT\\ConOcultos.zip"));
 	//Options
-	m_ZIP.SetIncludeBaseDirectory(FALSE);
+	m_ZIP.SetIncludeBaseDirectory(FALSE); //No existía en CDPolarZip
 	m_ZIP.SetIncludeHiddenFiles(TRUE);
 	m_ZIP.SetIncludeDirectoryEntries(FALSE);
 	m_ZIP.SetOverwrite(FALSE);
@@ -199,6 +200,18 @@ void CMFCzipAppApp::OnAppTestZip()
 	//m_ZIP.SetSkipFilesAfterDate(_T(""));  //¿lo necesitamos?
 	//m_ZIP.SetSkipFilesBeforeDate(_T(""));
 	if (m_ZIP.Add())
+	{
+		CString sErr = m_ZIP.GetLastZipError(hr);
+		this->m_pMainWnd->MessageBox(sErr.GetString(), _T("Error"), MB_OK | MB_ICONSTOP);
+
+	}
+
+	//-----------------------------------------------------------------
+	// Ejemplo para extraer todo
+	m_ZIP.SetSourceDirectory(_T(""));
+	m_ZIP.SetExtractDirectory(_T("C:\\Arktec\\LGT\\ConOcultos extraer"));
+	m_ZIP.SetZipFileName(_T("C:\\Arktec\\LGT\\ConOcultos.zip"));
+	if (m_ZIP.Extract())
 	{
 		CString sErr = m_ZIP.GetLastZipError(hr);
 		this->m_pMainWnd->MessageBox(sErr.GetString(), _T("Error"), MB_OK | MB_ICONSTOP);

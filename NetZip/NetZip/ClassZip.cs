@@ -6,7 +6,7 @@ using System.IO.Compression;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
-
+using System.Globalization;
 
 namespace NetZip
 {
@@ -139,15 +139,39 @@ namespace NetZip
                     {
                         foreach (ZipArchiveEntry entry in archive.Entries)
                         {
+                            // Gets the full path to ensure that relative segments are removed.
+                            string destinationPath = Path.GetFullPath(Path.Combine(m_ExtractDirectory, entry.FullName));
+                            // Ensure no redirection paths
+                            if (!destinationPath.StartsWith(m_ExtractDirectory, StringComparison.Ordinal))
+                                continue;
+
+                            //Comprobar subdirectorios
+                            string destinationDirName = Path.GetDirectoryName(destinationPath);
+                            if (!string.IsNullOrEmpty(destinationDirName) && !destinationDirName.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                                destinationDirName += Path.DirectorySeparatorChar;
+
+
+
+                            if (String.Compare(destinationDirName, m_ExtractDirectory, true) != 0)
+                            {
+                                //Hay subdirecotrios
+                                if (m_RecurseSubDirectories == false)
+                                {
+                                    //Saltar
+                                    continue;
+                                }
+                                else
+                                {
+                                    
+                                    if (!Directory.Exists(destinationDirName))
+                                        //Crear
+                                        Directory.CreateDirectory(destinationDirName);
+                                }
+                            }
+
                             if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
                             {
-                                // Gets the full path to ensure that relative segments are removed.
-                                string destinationPath = Path.GetFullPath(Path.Combine(m_ExtractDirectory, entry.FullName));
-
-                                // Ordinal match is safest, case-sensitive volumes can be mounted within volumes that
-                                // are case-insensitive.
-                                if (destinationPath.StartsWith(extractPath, StringComparison.Ordinal))
-                                    entry.ExtractToFile(destinationPath);
+                                entry.ExtractToFile(destinationPath, true);
                             }
                         }
                     }

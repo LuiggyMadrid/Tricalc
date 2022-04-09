@@ -280,7 +280,7 @@ CString CDPolarZipWarper::GetLastZipError(HRESULT& errorCode)
 	}
 	else
 	{
-		errorCode = -1;
+		errorCode = E_FAIL;
 		return CString("Error desconocido");
 	}
 }

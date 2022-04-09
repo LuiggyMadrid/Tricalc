@@ -199,7 +199,7 @@ void CMFCzipAppApp::OnAppTestZip()
 	m_ZIP.SetIncludeFileMask(_T("*"));
 	//m_ZIP.SetSkipFilesAfterDate(_T(""));  //¿lo necesitamos?
 	//m_ZIP.SetSkipFilesBeforeDate(_T(""));
-	if (m_ZIP.Add())
+	if (m_ZIP.Add() != 0)
 	{
 		CString sErr = m_ZIP.GetLastZipError(hr);
 		this->m_pMainWnd->MessageBox(sErr.GetString(), _T("Error"), MB_OK | MB_ICONSTOP);
@@ -211,11 +211,34 @@ void CMFCzipAppApp::OnAppTestZip()
 	m_ZIP.SetSourceDirectory(_T(""));
 	m_ZIP.SetExtractDirectory(_T("C:\\Arktec\\LGT\\ConOcultos extraer"));
 	m_ZIP.SetZipFileName(_T("C:\\Arktec\\LGT\\ConOcultos.zip"));
-	if (m_ZIP.Extract())
+	if (m_ZIP.Extract() != 0)
 	{
 		CString sErr = m_ZIP.GetLastZipError(hr);
 		this->m_pMainWnd->MessageBox(sErr.GetString(), _T("Error"), MB_OK | MB_ICONSTOP);
 
+	}
+
+	//-----------------------------------------------------------------
+	// Ejemplo para extraer algo
+	bool ok = true;
+	CString extractPath = _T("C:\\Arktec\\LGT\\ConOcultos extraer 2");
+	if (!CreateDirectory(extractPath.GetString(), nullptr))
+	{
+		if (GetLastError() != ERROR_ALREADY_EXISTS)
+			ok = false;
+	}
+	if (ok)
+	{
+		m_ZIP.SetSourceDirectory(_T(""));
+		m_ZIP.SetExtractDirectory(extractPath.GetString());
+		m_ZIP.SetZipFileName(_T("C:\\Arktec\\LGT\\ConOcultos.zip"));
+		m_ZIP.SetRecurseSubDirectories(FALSE);
+		if (m_ZIP.Extract() != 0)
+		{
+			CString sErr = m_ZIP.GetLastZipError(hr);
+			this->m_pMainWnd->MessageBox(sErr.GetString(), _T("Error"), MB_OK | MB_ICONSTOP);
+
+		}
 	}
 
 	// Be a good citizen and clean up COM:

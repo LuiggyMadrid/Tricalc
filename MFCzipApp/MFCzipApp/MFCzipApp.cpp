@@ -233,6 +233,7 @@ void CMFCzipAppApp::OnAppTestZip()
 		m_ZIP.SetExtractDirectory(extractPath.GetString());
 		m_ZIP.SetZipFileName(_T("C:\\Arktec\\LGT\\ConOcultos.zip"));
 		m_ZIP.SetRecurseSubDirectories(FALSE);
+		m_ZIP.SetOverwrite(TRUE);
 		if (m_ZIP.Extract() != 0)
 		{
 			CString sErr = m_ZIP.GetLastZipError(hr);

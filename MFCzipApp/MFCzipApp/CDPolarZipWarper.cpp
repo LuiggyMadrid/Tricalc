@@ -76,18 +76,6 @@ void CDPolarZipWarper::SetZipFileName(LPCTSTR pszZipName)
 		this->cppIzip->SetZipFileName(pszZipName);
 }
 
-
-BOOL CDPolarZipWarper::GetOverwrite()
-{
-	//TO DO
-	return TRUE;
-}
-
-void CDPolarZipWarper::SetOverwrite(BOOL val)
-{
-	//TO DO
-}
-
 BOOL CDPolarZipWarper::GetIncludeDirectoryEntries()
 {
 	//TO DO
@@ -137,6 +125,20 @@ void CDPolarZipWarper::SetRecurseSubDirectories(BOOL val)
 {
 	if (this->cppIzip)
 		this->cppIzip->SetRecurseSubDirectories(!!val);
+}
+
+BOOL CDPolarZipWarper::GetOverwrite()
+{
+	if (this->cppIzip)
+		return this->cppIzip->GetOverwrite();
+	else
+		return FALSE;
+}
+
+void CDPolarZipWarper::SetOverwrite(BOOL val)
+{
+	if (this->cppIzip)
+		this->cppIzip->SetOverwrite(!!val);
 }
 
 BOOL CDPolarZipWarper::GetStorePaths()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.IO.Compression;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -30,6 +31,7 @@ namespace NetZip
         private int _lastErrorCode = 0;
         private bool _recurseSubDirectories = false;
         private bool _includeBaseDirectory = false;
+        private bool _overwrite = false;
         private CompressionLevel _compressionLevel = CompressionLevel.Fastest;
 
 
@@ -38,6 +40,7 @@ namespace NetZip
         public int m_LastErrorCode { get => _lastErrorCode; protected set => _lastErrorCode = value; }
         public bool m_RecurseSubDirectories { get => _recurseSubDirectories; set => _recurseSubDirectories = value; }
         public bool m_IncludeBaseDirectory { get => _includeBaseDirectory; set => _includeBaseDirectory = value; }
+        public bool m_Overwrite { get => _overwrite; set => _overwrite = value; }
         public CompressionLevel m_CompressionLevel { get => _compressionLevel; set => _compressionLevel = value; }
         
         public string m_LastErrorMsg { get => _lastErrorMsg; protected set => _lastErrorMsg = value; }
@@ -99,6 +102,13 @@ namespace NetZip
         {
             m_LastErrorCode = 0;
             m_LastErrorMsg = string.Empty;
+
+            //Test
+            bool o1 = false;
+            o1 = MatchFileMask("casi?a d? pape?", "Casita de Papel");
+            o1 = MatchFileMask("?asita d? pape?", "Casita de Papel");
+            o1 = MatchFileMask("casi*pape?", "Casita de Papel");
+            o1 = MatchFileMask("*a d? p*", "Casita de Papel");
 
             if (string.IsNullOrEmpty(m_ExtractDirectory) ||
                 string.IsNullOrEmpty(m_ZipFileName))
@@ -171,7 +181,7 @@ namespace NetZip
 
                             if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
                             {
-                                entry.ExtractToFile(destinationPath, true);
+                                entry.ExtractToFile(destinationPath, m_Overwrite);
                             }
                         }
                     }
@@ -186,8 +196,118 @@ namespace NetZip
 
             // Resto de casos
             return 0;
+        } //public Int32 Extract()
+
+        private class wildcard
+        {
+            public int loc = -1;
+            public bool isAsterisc = true;
+        };
+
+        /// <summary>
+        /// Test if a filename matches a fila mask
+        /// </summary>
+        /// <param name="fileMask">mask, with wildcards and directories</param>
+        /// <param name="fileName">filename, with full path</param>
+        /// <returns></returns>
+        private bool MatchFileMask(string fileMask, string fileName)
+        {
+            if (String.IsNullOrEmpty(fileMask))
+                return true;
+            if (String.Compare(fileMask, "*") == 0)
+                return true;
+
+            if (fileMask.IndexOf("*", StringComparison.Ordinal) == -1 && fileMask.IndexOf("?", StringComparison.Ordinal) == -1)
+            {
+                //There is no wildcards
+                if (String.Compare(fileMask, fileName, true) == 0)
+                    return true;
+                else
+                    return false;
+            }
+
+            //There are wildcards
+            //Regex emailregex = new Regex("(?<user>[^@]+)@(?<host>.+)");
+            //Match m = emailregex.Match(fileName);
+
+        
+            List<wildcard> wildcards = new List<wildcard>();
+            int loc = -1, nast = 0, nques = 0;
+            do
+            {
+                wildcard uwc = new wildcard();
+                int loc1 = fileMask.IndexOf("*", loc + 1, StringComparison.Ordinal);
+                int loc2 = fileMask.IndexOf("?", loc + 1, StringComparison.Ordinal);
+                if (loc1 >= 0 && loc2 >= 0)
+                {
+                    loc = Math.Min(loc1, loc2);
+                    uwc.loc = loc;
+                    uwc.isAsterisc = loc1 < loc2;
+                    wildcards.Add(uwc);
+                    if (loc1 < loc2) nast++;
+                    else nques++;
+                }
+                else if (loc1 >= 0)
+                {
+                    loc = loc1;
+                    uwc.loc = loc;
+                    uwc.isAsterisc = true;
+                    wildcards.Add(uwc);
+                    nast++;
+                }
+                else if (loc2 >= 0)
+                {
+                    loc = loc2;
+                    uwc.loc = loc;
+                    uwc.isAsterisc = false;
+                    wildcards.Add(uwc);
+                    nques++;
+                }
+                else
+                    loc = -1;
+            } while (loc != -1) ;
+
+            if (nast > 0)
+            {
+                //Hay asteriscos (y puede que interrogaciones)
+                int nwc = wildcards.Count;
+                int locd = 0;
+                for (int iwc = 0; iwc <= nwc; iwc++)
+                {
+                    int ini = iwc == 0 ? 0 : wildcards[iwc - 1].loc + 1;
+                    int fin = iwc == nwc ? fileMask.Length - 1 : wildcards[iwc].loc - 1;
+                    bool isAsterisc = iwc == 0 ? false : wildcards[iwc - 1].isAsterisc;
+                    if (ini >= fileMask.Length || fin < ini)
+                        continue;
+                    String imask = fileMask.Substring(ini, fin - ini + 1);
+                    String ifile = fileName.Substring(locd);
+                    int locOk = ifile.IndexOf(imask, StringComparison.OrdinalIgnoreCase);
+                    if (locOk < 0)
+                        return false;
+                    if (!isAsterisc && locOk != 0)
+                        return false;
+                    locd = locOk + fin - ini + 2;
+                }
+            }
+            else
+            {
+                //Sólo hay interrogaciones
+                for (int iwc=0; iwc<=nques; iwc++)
+                {
+                    int ini = iwc == 0 ? 0 : wildcards[iwc - 1].loc + 1;
+                    int fin = iwc == nques ? fileMask.Length - 1 : wildcards[iwc].loc - 1;
+                    if (ini >= fileMask.Length || fin < ini)
+                        continue;
+                    String imask = fileMask.Substring(ini, fin - ini + 1);
+                    String ifile = fileName.Substring(ini);
+                    if (ifile.IndexOf(imask, StringComparison.OrdinalIgnoreCase) != 0)
+                        return false;
+                }
+            }
+
+            return true;
         }
-    }
+    } //public class ClassZip
 
     [Guid("82508DF9-C406-4B57-808B-C23B41B9A633")]
     public interface INetZipInterface
@@ -195,6 +315,7 @@ namespace NetZip
         bool Create();
         void SetRecurseSubDirectories(bool recurseSubDirectories);
         void SetIncludeBaseDirectory(bool includeBaseDirectory);
+        void SetOverwrite(bool overwrite);
         void SetCompressionLevel(Int32 compressionLevel);
 
         void SetSourceDirectory(string sourceDir);
@@ -209,6 +330,7 @@ namespace NetZip
         int GetVersion();
         bool GetRecurseSubDirectories();
         bool GetIncludeBaseDirectory();
+        bool GetOverwrite();
         Int32 GetCompressionLevel();
 
         string GetSourceDirectory();
@@ -263,6 +385,7 @@ namespace NetZip
 
         public void SetRecurseSubDirectories(bool recurseSubDirectories) { zipI.m_RecurseSubDirectories = recurseSubDirectories; }
         public void SetIncludeBaseDirectory(bool includeBaseDirectory) { zipI.m_IncludeBaseDirectory = includeBaseDirectory; }
+        public void SetOverwrite(bool overwrite) { zipI.m_Overwrite = overwrite; }
         public void SetCompressionLevel(Int32 compressionLevel) {
             if (compressionLevel == 0) zipI.m_CompressionLevel = CompressionLevel.NoCompression;
             else if (compressionLevel <= 5) zipI.m_CompressionLevel = CompressionLevel.Fastest;
@@ -300,6 +423,7 @@ namespace NetZip
         public int GetVersion() { return zipI.m_Version; }
         public bool GetRecurseSubDirectories() { return zipI.m_RecurseSubDirectories; }
         public bool GetIncludeBaseDirectory() { return zipI.m_IncludeBaseDirectory; }
+        public bool GetOverwrite() { return zipI.m_Overwrite; }
         public Int32 GetCompressionLevel()
         {
             switch (zipI.m_CompressionLevel)

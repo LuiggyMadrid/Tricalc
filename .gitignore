@@ -7,3 +7,4 @@
 /NetZip/NetZip/obj
 /NetZip/NetZip/bin/Debug
 /x64/Debug
+*.pfx

@@ -20,9 +20,9 @@ namespace NetZip
         //Data
         private string _sourceDirectory = null;
         private string _extractDirectory = null;
-        private string _excludeFileMask = null;
-        private string _includeFileMask = null;
-        private string _noCompressSuffixes = null;
+        private string[] _excludeFileMask = null;
+        private string[] _includeFileMask = null;
+        private string[] _noCompressSuffixes = null;
         private string _password = null;
         private string _zipFileName = null;
         private string _lastErrorMsg = null;
@@ -46,9 +46,9 @@ namespace NetZip
         public string m_LastErrorMsg { get => _lastErrorMsg; protected set => _lastErrorMsg = value; }
         public string m_SourceDirectory { get => _sourceDirectory; set => _sourceDirectory = value; }
         public string m_ExtractDirectory { get => _extractDirectory; set => _extractDirectory = value; }
-        public string m_ExcludeFileMask { get => _excludeFileMask; set => _excludeFileMask = value; }
-        public string m_IncludeFileMask { get => _includeFileMask; set => _includeFileMask = value; }
-        public string m_NoCompressSuffixes { get => _noCompressSuffixes; set => _noCompressSuffixes = value; }
+        public string[] m_ExcludeFileMask { get => _excludeFileMask; set => _excludeFileMask = value; }
+        public string[] m_IncludeFileMask { get => _includeFileMask; set => _includeFileMask = value; }
+        public string[] m_NoCompressSuffixes { get => _noCompressSuffixes; set => _noCompressSuffixes = value; }
         public string m_Password { get => _password; set => _password = value; }
         public string m_ZipFileName { get => _zipFileName; set => _zipFileName = value; }
 
@@ -70,12 +70,12 @@ namespace NetZip
                 m_LastErrorMsg = "Hay parámetros vacíos";
                 return m_LastErrorCode;
             }
-            
+
             if (create == true &&
                 m_RecurseSubDirectories == true &&
-                string.IsNullOrEmpty(m_ExcludeFileMask) &&
-                string.IsNullOrEmpty(m_NoCompressSuffixes) &&
-                (string.IsNullOrEmpty(m_IncludeFileMask) || m_IncludeFileMask == "*"))
+                m_ExcludeFileMask.Count() == 0 &&
+                m_NoCompressSuffixes.Count() == 0 &&
+                (m_IncludeFileMask.Count() == 0 || (m_IncludeFileMask.Count() == 1 && m_IncludeFileMask[0] == "*")))
             {
                 //Compress Directory
                 try
@@ -103,13 +103,6 @@ namespace NetZip
             m_LastErrorCode = 0;
             m_LastErrorMsg = string.Empty;
 
-            //Test
-            bool o1 = false;
-            o1 = MatchFileMask("casi?a d? pape?", "Casita de Papel");
-            o1 = MatchFileMask("?asita d? pape?", "Casita de Papel");
-            o1 = MatchFileMask("casi*pape?", "Casita de Papel");
-            o1 = MatchFileMask("*a d? p*", "Casita de Papel");
-
             if (string.IsNullOrEmpty(m_ExtractDirectory) ||
                 string.IsNullOrEmpty(m_ZipFileName))
             {
@@ -119,9 +112,9 @@ namespace NetZip
             }
 
             if (m_RecurseSubDirectories == true &&
-                string.IsNullOrEmpty(m_ExcludeFileMask) &&
-                string.IsNullOrEmpty(m_NoCompressSuffixes) &&
-                (string.IsNullOrEmpty(m_IncludeFileMask) || m_IncludeFileMask == "*"))
+                m_ExcludeFileMask.Count() == 0 &&
+                m_NoCompressSuffixes.Count() == 0 &&
+                (m_IncludeFileMask.Count() == 0 || (m_IncludeFileMask.Count() == 1 && m_IncludeFileMask[0] == "*")))
             {
                 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                 // Extract Full Directory
@@ -149,39 +142,85 @@ namespace NetZip
                     {
                         foreach (ZipArchiveEntry entry in archive.Entries)
                         {
-                            // Gets the full path to ensure that relative segments are removed.
-                            string destinationPath = Path.GetFullPath(Path.Combine(m_ExtractDirectory, entry.FullName));
-                            // Ensure no redirection paths
-                            if (!destinationPath.StartsWith(m_ExtractDirectory, StringComparison.Ordinal))
-                                continue;
-
-                            //Comprobar subdirectorios
-                            string destinationDirName = Path.GetDirectoryName(destinationPath);
-                            if (!string.IsNullOrEmpty(destinationDirName) && !destinationDirName.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
-                                destinationDirName += Path.DirectorySeparatorChar;
-
-
-
-                            if (String.Compare(destinationDirName, m_ExtractDirectory, true) != 0)
+                            try
                             {
-                                //Hay subdirecotrios
-                                if (m_RecurseSubDirectories == false)
-                                {
-                                    //Saltar
+                                // Gets the full path to ensure that relative segments are removed.
+                                string destinationPath = Path.GetFullPath(Path.Combine(m_ExtractDirectory, entry.FullName));
+                                // Ensure no redirection paths
+                                if (!destinationPath.StartsWith(m_ExtractDirectory, StringComparison.Ordinal))
                                     continue;
-                                }
-                                else
+
+                                string destinationDirName = Path.GetDirectoryName(destinationPath);
+                                if (!string.IsNullOrEmpty(destinationDirName) && !destinationDirName.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                                    destinationDirName += Path.DirectorySeparatorChar;
+
+                                //1. Subdirectories
+                                if (String.Compare(destinationDirName, m_ExtractDirectory, true) != 0 && m_RecurseSubDirectories == false)
+                                    continue;
+
+                                //2. Suffixes
+                                if (m_NoCompressSuffixes.Count() > 0)
                                 {
-                                    
+                                    bool found = false;
+                                    foreach (string strExt in m_NoCompressSuffixes)
+                                    {
+                                        if (entry.FullName.EndsWith(strExt, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (found)
+                                        continue;
+                                }
+
+                                //3.Exluded files
+                                if (m_ExcludeFileMask.Count() > 0)
+                                {
+                                    bool found = false;
+                                    foreach (string strMask in m_ExcludeFileMask)
+                                    {
+                                        if (MatchFullPathMask(strMask, destinationPath))
+                                        {
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (found)
+                                        continue;
+                                }
+
+                                //4. Included files
+                                if (m_IncludeFileMask.Count() > 0)
+                                {
+                                    bool found = false;
+                                    foreach (string strMask in m_IncludeFileMask)
+                                    {
+                                        if (MatchFullPathMask(strMask, destinationPath))
+                                        {
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!found)
+                                        continue;
+                                }
+
+                                //Create subdirectory if needed
+                                if (String.Compare(destinationDirName, m_ExtractDirectory, true) != 0)
+                                {
+                                    //Its a subdirectory
                                     if (!Directory.Exists(destinationDirName))
                                         //Crear
                                         Directory.CreateDirectory(destinationDirName);
                                 }
-                            }
 
-                            if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
-                            {
                                 entry.ExtractToFile(destinationPath, m_Overwrite);
+                            }
+                            catch (Exception ex)
+                            {
+                                m_LastErrorMsg = ex.Message;
+                                m_LastErrorCode = ex.HResult;
                             }
                         }
                     }
@@ -195,20 +234,20 @@ namespace NetZip
             }
 
             // Resto de casos
-            return 0;
+            return m_LastErrorCode;
         } //public Int32 Extract()
 
         private class wildcard
         {
             public int loc = -1;
             public bool isAsterisc = true;
-        };
+        }
 
         /// <summary>
-        /// Test if a filename matches a fila mask
+        /// Test if a filename matches a fila mask, Auxiliar function for MatchFullPathMask
         /// </summary>
-        /// <param name="fileMask">mask, with wildcards and directories</param>
-        /// <param name="fileName">filename, with full path</param>
+        /// <param name="fileMask">mask, with wildcards but without directories</param>
+        /// <param name="fileName">filename, wkthout path</param>
         /// <returns></returns>
         private bool MatchFileMask(string fileMask, string fileName)
         {
@@ -307,6 +346,28 @@ namespace NetZip
 
             return true;
         }
+
+        /// <summary>
+        /// Checks a full path name with a mask
+        /// </summary>
+        /// <param name="filePathMask">Full file path mask with wildcards</param>
+        /// <param name="filePathName">Full file path name</param>
+        /// <returns>true fi matches</returns>
+        private bool MatchFullPathMask(string filePathMask, string filePathName)
+        {
+            string[] splitMask = filePathMask.Split(Path.DirectorySeparatorChar);
+            string[] splitName = filePathName.Split(Path.DirectorySeparatorChar);
+            int nMask = splitMask.Length;
+            int nName = splitName.Length;
+
+            if (nMask > nName || nMask < nName - 1)
+                return false;
+            for (int iwc = 0; iwc < nMask; iwc++)
+                if (!MatchFileMask(splitMask[iwc], splitName[iwc]))
+                    return false;
+
+            return true;
+        }
     } //public class ClassZip
 
     [Guid("82508DF9-C406-4B57-808B-C23B41B9A633")]
@@ -320,9 +381,9 @@ namespace NetZip
 
         void SetSourceDirectory(string sourceDir);
         void SetExtractDirectory(string extractDir);
-        void SetExcludeFileMask(string excludeFileMask);
-        void SetIncludeFileMask(string includeFileMask);
-        void SetNoCompressSuffixes(string noCompressSuffixes);
+        void SetExcludeFileMask(string excludeFileMask, char separator);
+        void SetIncludeFileMask(string includeFileMask, char separator);
+        void SetNoCompressSuffixes(string noCompressSuffixes, char separator);
         void SetPassword(string password);
         void SetZipFileName(string zipFileName);
 
@@ -335,9 +396,9 @@ namespace NetZip
 
         string GetSourceDirectory();
         string GetExtractDirectory();
-        string GetExcludeFileMask();
-        string GetIncludeFileMask();
-        string GetNoCompressSuffixes();
+        string GetExcludeFileMask(char separator);
+        string GetIncludeFileMask(char separator);
+        string GetNoCompressSuffixes(char separator);
         string GetPassword();
         string GetZipFileName();
 
@@ -406,17 +467,57 @@ namespace NetZip
                 extractDir += Path.DirectorySeparatorChar;
             zipI.m_ExtractDirectory = extractDir;
         }
-        public void SetExcludeFileMask(string excludeFileMask) { zipI.m_ExcludeFileMask = excludeFileMask; }
-        public void SetIncludeFileMask(string includeFileMask) { zipI.m_IncludeFileMask = includeFileMask; }
-        public void SetNoCompressSuffixes(string noCompressSuffixes) { zipI.m_NoCompressSuffixes = noCompressSuffixes; }
+        public void SetExcludeFileMask(string excludeFileMask, char separator)
+        {
+            char[] separators = new char[] { separator };
+            zipI.m_ExcludeFileMask = excludeFileMask.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+        }
+        public void SetIncludeFileMask(string includeFileMask, char separator)
+        {
+            char[] separators = new char[] { separator };
+            zipI.m_IncludeFileMask = includeFileMask.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+        }
+        public void SetNoCompressSuffixes(string noCompressSuffixes, char separator)
+        {
+            char[] separators = new char[] {separator};
+            zipI.m_NoCompressSuffixes = noCompressSuffixes.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+        }
         public void SetPassword(string password) { zipI.m_Password = password; }
         public void SetZipFileName(string zipFileName) { zipI.m_ZipFileName = zipFileName; }
 
         public string GetSourceDirectory() { return zipI.m_SourceDirectory; }
         public string GetExtractDirectory() { return zipI.m_ExtractDirectory; }
-        public string GetExcludeFileMask() { return zipI.m_ExcludeFileMask; }
-        public string GetIncludeFileMask() { return zipI.m_IncludeFileMask; }
-        public string GetNoCompressSuffixes() { return zipI.m_NoCompressSuffixes; }
+        public string GetExcludeFileMask(char separator) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < zipI.m_NoCompressSuffixes.Count(); i++)
+            {
+                if (i > 0)
+                    sb.Append(separator);
+                sb.Append(zipI.m_ExcludeFileMask[i]);
+            }
+            return sb.ToString();
+        }
+        public string GetIncludeFileMask(char separator) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < zipI.m_NoCompressSuffixes.Count(); i++)
+            {
+                if (i > 0)
+                    sb.Append(separator);
+                sb.Append(zipI.m_IncludeFileMask[i]);
+            }
+            return sb.ToString();
+        }
+        public string GetNoCompressSuffixes(char separator)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < zipI.m_NoCompressSuffixes.Count(); i++)
+            {
+                if(i > 0)
+                    sb.Append(separator);
+                sb.Append(zipI.m_NoCompressSuffixes[i]);
+            }
+            return sb.ToString();
+        }
         public string GetPassword() { return zipI.m_Password; }
         public string GetZipFileName() { return zipI.m_ZipFileName; }
 

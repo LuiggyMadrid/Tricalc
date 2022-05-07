@@ -177,49 +177,49 @@ void CDPolarZipWarper::SetCompressionLevel(long val)
 		this->cppIzip->SetCompressionLevel(val);
 }
 
-CString CDPolarZipWarper::GetExcludeFileMask()
+CString CDPolarZipWarper::GetExcludeFileMask(TCHAR chSeparator)
 {
 	if (this->cppIzip)
-		return CString(this->cppIzip->GetExcludeFileMask().GetBSTR());
+		return CString(this->cppIzip->GetExcludeFileMask(chSeparator).GetBSTR());
 	else
 		return CString("");
 }
 
-void CDPolarZipWarper::SetExcludeFileMask(LPCTSTR pszExcludeFileMask)
+void CDPolarZipWarper::SetExcludeFileMask(LPCTSTR pszExcludeFileMask, TCHAR chSeparator)
 {
 	if (this->cppIzip)
-		this->cppIzip->SetExcludeFileMask(pszExcludeFileMask);
+		this->cppIzip->SetExcludeFileMask(pszExcludeFileMask, chSeparator);
 }
 
 
 
-CString CDPolarZipWarper::GetIncludeFileMask()
+CString CDPolarZipWarper::GetIncludeFileMask(TCHAR chSeparator)
 {
 	if (this->cppIzip)
-		return CString(this->cppIzip->GetIncludeFileMask().GetBSTR());
+		return CString(this->cppIzip->GetIncludeFileMask(chSeparator).GetBSTR());
 	else
 		return CString("");
 }
 
-void CDPolarZipWarper::SetIncludeFileMask(LPCTSTR pszIncludeFileMask)
+void CDPolarZipWarper::SetIncludeFileMask(LPCTSTR pszIncludeFileMask, TCHAR chSeparator)
 {
 	if (this->cppIzip)
-		this->cppIzip->SetIncludeFileMask(pszIncludeFileMask);
+		this->cppIzip->SetIncludeFileMask(pszIncludeFileMask, chSeparator);
 }
 
 
-CString CDPolarZipWarper::GetNoCompressSuffixes()
+CString CDPolarZipWarper::GetNoCompressSuffixes(TCHAR chSeparator)
 {
 	if (this->cppIzip)
-		return CString(this->cppIzip->GetNoCompressSuffixes().GetBSTR());
+		return CString(this->cppIzip->GetNoCompressSuffixes(chSeparator).GetBSTR());
 	else
 		return CString("");
 }
 
-void CDPolarZipWarper::SetNoCompressSuffixes(LPCTSTR pszNoCompressSuffixes)
+void CDPolarZipWarper::SetNoCompressSuffixes(LPCTSTR pszNoCompressSuffixes, TCHAR chSeparator)
 {
 	if (this->cppIzip)
-		this->cppIzip->SetNoCompressSuffixes(pszNoCompressSuffixes);
+		this->cppIzip->SetNoCompressSuffixes(pszNoCompressSuffixes, chSeparator);
 }
 
 

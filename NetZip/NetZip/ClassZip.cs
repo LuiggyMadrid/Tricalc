@@ -80,6 +80,8 @@ namespace NetZip
                 //Compress Directory
                 try
                 {
+                    if (File.Exists(m_ZipFileName))
+                        File.Delete(m_ZipFileName);
                     ZipFile.CreateFromDirectory(m_SourceDirectory, m_ZipFileName, m_CompressionLevel, m_IncludeBaseDirectory);
                     return 0;
                 }
@@ -90,7 +92,102 @@ namespace NetZip
                     return ex.HResult;
                 }
             }
-            return 0;
+
+            //Adds files one to one
+            FileMode mode = FileMode.Open;
+            if (!File.Exists(m_ZipFileName) || create)
+                mode = FileMode.Create;
+            SearchOption serahOpt = m_RecurseSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            try
+            {
+                using (FileStream zipToOpen = new FileStream(m_ZipFileName, mode))
+                {
+                    using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update))
+                    {
+                        var filenames = Directory.EnumerateFiles(m_SourceDirectory, "*", serahOpt);
+                        foreach (var filename in filenames)
+                        {
+                            try
+                            {
+                                string fn = filename;
+                                if (!m_IncludeBaseDirectory)
+                                    fn = filename.Substring(m_SourceDirectory.Length + 1);
+
+                                //-----------------------
+
+                                //2. Suffixes
+                                if (m_NoCompressSuffixes.Count() > 0)
+                                {
+                                    bool found = false;
+                                    foreach (string strExt in m_NoCompressSuffixes)
+                                    {
+                                        if (fn.EndsWith(strExt, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (found)
+                                        continue;
+                                }
+
+                                //3.Exluded files
+                                if (m_ExcludeFileMask.Count() > 0)
+                                {
+                                    bool found = false;
+                                    foreach (string strMask in m_ExcludeFileMask)
+                                    {
+                                        if (MatchFullPathMask(strMask, fn))
+                                        {
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (found)
+                                        continue;
+                                }
+
+                                //4. Included files
+                                if (m_IncludeFileMask.Count() > 0)
+                                {
+                                    bool found = false;
+                                    foreach (string strMask in m_IncludeFileMask)
+                                    {
+                                        if (MatchFullPathMask(strMask, fn))
+                                        {
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!found)
+                                        continue;
+                                }
+
+                                ZipArchiveEntry entry = archive.CreateEntry(fn);
+                                using (StreamWriter writer = new StreamWriter(entry.Open()))
+                                {
+                                    writer.WriteLine("Information about this package.");
+                                    writer.WriteLine("========================");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                m_LastErrorMsg = ex.Message;
+                                m_LastErrorCode = ex.HResult;
+                                return ex.HResult;
+                            }
+                        } //foreach (var filename in filenames)
+                    } //using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update))
+                } //using (FileStream zipToOpen = new FileStream(m_ZipFileName, mode))
+            }
+            catch (Exception ex)
+            {
+                m_LastErrorMsg = ex.Message;
+                m_LastErrorCode = ex.HResult;
+                return ex.HResult;
+            }
+
+            return m_LastErrorCode;
         }
 
         //----------------------------------------------------------------------

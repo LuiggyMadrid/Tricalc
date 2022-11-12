@@ -18,7 +18,7 @@ CDPolarZipWarper::CDPolarZipWarper(CWnd* _pParentWnd)
 		printf("Couldn't create the instance!... 0x%x\n", hr);
 		ret = FALSE;
 	}
-	if (!cppIzip || !cppIzip->Create())
+	else if (!cppIzip || !cppIzip->Create())
 		ret = FALSE;
 	if (!ret)
 	{
@@ -79,12 +79,15 @@ void CDPolarZipWarper::SetZipFileName(LPCTSTR pszZipName)
 BOOL CDPolarZipWarper::GetIncludeDirectoryEntries()
 {
 	//TO DO
+	_ASSERTE(false);
 	return TRUE;
 }
 
 void CDPolarZipWarper::SetIncludeDirectoryEntries(BOOL val)
 {
 	//TO DO
+	//TRUE val is always asumed
+	_ASSERTE(false);
 }
 
 BOOL CDPolarZipWarper::GetIncludeBaseDirectory()
@@ -105,12 +108,15 @@ void CDPolarZipWarper::SetIncludeBaseDirectory(BOOL val)
 BOOL CDPolarZipWarper::GetIncludeHiddenFiles()
 {
 	//TO DO
+	_ASSERTE(false);
 	return TRUE;
 }
 
 void CDPolarZipWarper::SetIncludeHiddenFiles(BOOL val)
 {
 	//TO DO
+	//TRUE val is akkways asumed
+	_ASSERTE(false);
 }
 
 BOOL CDPolarZipWarper::GetRecurseSubDirectories()
@@ -144,23 +150,28 @@ void CDPolarZipWarper::SetOverwrite(BOOL val)
 BOOL CDPolarZipWarper::GetStorePaths()
 {
 	//TO DO
+	_ASSERTE(false);
 	return TRUE;
 }
 
 void CDPolarZipWarper::SetStorePaths(BOOL val)
 {
 	//TO DO
+	_ASSERTE(false);
 }
 
 BOOL CDPolarZipWarper::GetUsePassword()
 {
 	//TO DO
-	return TRUE;
+	_ASSERTE(false);
+	return FALSE;
 }
 
 void CDPolarZipWarper::SetUsePassword(BOOL val)
 {
 	//TO DO
+	//FALSE val is allways asumed
+	_ASSERTE(false);
 }
 
 long CDPolarZipWarper::GetCompressionLevel()
@@ -251,8 +262,6 @@ HRESULT CDPolarZipWarper::Add(BOOL create)
 	else
 		return S_FALSE;
 }
-
-//Conflicto
 
 /// <summary>
 /// Extracts from an existing Zip file

@@ -179,6 +179,8 @@ void CMFCzipAppApp::OnAppTestZip()
 	if (!ret)
 		return;
 	
+	CString hashString = m_ZIP.GetFileHash256(_T("C:\\Arktec\\Tricalc 15.1\\Tricalc.exe"));
+	CString hashString2 = m_ZIP.GetFileHash256(_T("C:\\Arktec\\Tricalc 15.1\\Tricalc.ex"));
 	//--------------------------------------------------------------------------
 	// Ejemplo para comprimir un directorio
 	m_ZIP.SetSourceDirectory(_T("C:\\Arktec\\LGT\\ConOcultos"));
@@ -186,11 +188,11 @@ void CMFCzipAppApp::OnAppTestZip()
 	m_ZIP.SetZipFileName(_T("C:\\Arktec\\LGT\\ConOcultos.zip"));
 	//Options
 	m_ZIP.SetIncludeBaseDirectory(FALSE); //No existía en CDPolarZip
-	m_ZIP.SetIncludeHiddenFiles(TRUE);
-	m_ZIP.SetIncludeDirectoryEntries(FALSE);
+	//m_ZIP.SetIncludeHiddenFiles(TRUE);
+	//m_ZIP.SetIncludeDirectoryEntries(FALSE);
 	m_ZIP.SetOverwrite(FALSE);
 	m_ZIP.SetRecurseSubDirectories(TRUE);
-	m_ZIP.SetStorePaths(TRUE);
+	//m_ZIP.SetStorePaths(TRUE);
 	m_ZIP.SetUsePassword(FALSE);
 	m_ZIP.SetPassword(_T(""));
 	m_ZIP.SetCompressionLevel(9);	// El máximo

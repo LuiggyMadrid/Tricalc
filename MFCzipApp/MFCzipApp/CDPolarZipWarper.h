@@ -111,6 +111,8 @@ public:
 	HRESULT Extract();
 
 	long FixZipFile(LPCTSTR strZipFileName, BOOL bHarder); // Not implemented
+
+	CString GetFileHash256(LPCTSTR strFullFileName);
 };
 
 

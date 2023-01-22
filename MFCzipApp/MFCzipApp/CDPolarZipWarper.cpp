@@ -171,7 +171,7 @@ void CDPolarZipWarper::SetUsePassword(BOOL val)
 {
 	//TO DO
 	//FALSE val is allways asumed
-	_ASSERTE(false);
+	_ASSERTE(!val);
 }
 
 long CDPolarZipWarper::GetCompressionLevel()
@@ -292,6 +292,18 @@ CString CDPolarZipWarper::GetLastZipError(HRESULT& errorCode)
 	else
 	{
 		errorCode = E_FAIL;
+		return CString("Error desconocido");
+	}
+}
+
+CString CDPolarZipWarper::GetFileHash256(LPCTSTR strFullFileName)
+{
+	if (this->cppIzip)
+	{
+		return CString(cppIzip->GetFileHash256(strFullFileName).GetBSTR());
+	}
+	else
+	{
 		return CString("Error desconocido");
 	}
 }

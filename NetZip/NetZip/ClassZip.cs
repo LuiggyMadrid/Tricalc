@@ -8,6 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Globalization;
+using System.Security.Cryptography;
 
 namespace NetZip
 {
@@ -477,6 +478,47 @@ namespace NetZip
 
             return true;
         }
+
+        public static string getFileHash256(string fullFileName)
+        {
+            string hashString = string.Empty;
+
+            // Initialize a SHA256 hash object.
+            using (SHA256 mySHA256 = SHA256.Create())
+            {
+                FileInfo fInfo = new FileInfo(fullFileName);
+                if (!fInfo.Exists)
+                    return hashString;
+                using (FileStream fileStream = fInfo.Open(FileMode.Open))
+                {
+                    try
+                    {
+                        // Create a fileStream for the file.
+                        // Be sure it's positioned to the beginning of the stream.
+                        fileStream.Position = 0;
+                        // Compute the hash of the fileStream.
+                        byte[] hashValue = mySHA256.ComputeHash(fileStream);
+                        // Write the name and hash value of the file to the console.
+                        StringBuilder sb = new StringBuilder("", 64);
+                        for (int i = 0; i < hashValue.Length; i++)
+                        {
+                            sb.Append($"{hashValue[i]:X2}");
+                        }
+                        hashString = sb.ToString();
+                    }
+                    catch (IOException e)
+                    {
+                        hashString = ($"I/O Exception: {e.Message}");
+                    }
+                    catch (UnauthorizedAccessException e)
+                    {
+                        hashString = ($"Access Exception: {e.Message}");
+                    }
+                }
+            }
+
+            return hashString;
+        }
     } //public class ClassZip
 
     /// <summary>
@@ -537,6 +579,9 @@ namespace NetZip
         /// <param name="hResult">Error code (0 == S_OK for success</param>
         /// <returns>Error Message</returns>
         string GetLastZipError(ref Int32 hResult);
+
+        //++++++++++++++++++++++
+        string GetFileHash256(string fullFileName);
     }
     /// <summary>
     /// Assembly GUID and implementation of the interface
@@ -599,7 +644,8 @@ namespace NetZip
         }
         public void SetPassword(string password) {
             zipI.Password = password;
-            throw new NotImplementedException();
+            if (!string.IsNullOrEmpty(password))
+                throw new NotImplementedException();
         }
         public void SetZipFileName(string zipFileName) { zipI.ZipFileName = zipFileName; }
 
@@ -662,6 +708,11 @@ namespace NetZip
         {
             hResult = zipI.LastErrorCode;
             return zipI.LastErrorMsg;
+        }
+
+        public string GetFileHash256(string fullFileName)
+        {
+            return ClassZip.getFileHash256(fullFileName);
         }
     }
 }
